@@ -1,0 +1,31 @@
+{
+  "realm": "workout-tracker",
+  "loginTheme": "workout-tracker",
+  "enabled": true,
+  "registrationAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "user",  "description": "Regular app user" },
+      { "name": "admin", "description": "Can manage exercises" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "workout-frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      }
+    }
+  ],
+  "defaultRoles": ["user"]
+}

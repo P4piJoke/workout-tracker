@@ -1,0 +1,20 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/workout_tracker
+
+    elasticsearch:
+      uris: http://localhost:9200
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/workout-tracker   # Keycloak realm
+
+server:
+  port: 8080
+
+client:
+  allowed-origins: http://localhost:5173
+  cors-pattern: /api/**
