@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/axiosClient';
 
 const MUSCLE_GROUPS = [
-  'CHEST','BACK','SHOULDERS','BICEPS','TRICEPS',
-  'LEGS','GLUTES','CORE','CALVES','FOREARMS',
+  'CHEST', 'BACK', 'SHOULDERS', 'BICEPS', 'TRICEPS',
+  'LEGS', 'GLUTES', 'CORE', 'CALVES', 'FOREARMS',
 ];
 const EXERCISE_TYPES = ['STRENGTH', 'CARDIO', 'FLEXIBILITY'];
 
@@ -19,11 +19,11 @@ function useCreateExercise() {
 
 export default function AddExerciseModal({ onClose }) {
   const [form, setForm] = useState({
-    name:             '',
-    description:      '',
-    primaryMuscle:    'CHEST',
+    name: '',
+    description: '',
+    primaryMuscle: 'CHEST',
     secondaryMuscles: [],
-    type:             'STRENGTH',
+    type: 'STRENGTH',
   });
   const [error, setError] = useState('');
 
@@ -53,7 +53,7 @@ export default function AddExerciseModal({ onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal modal--narrow" onClick={e => e.stopPropagation()}
-           role="dialog" aria-modal="true">
+        role="dialog" aria-modal="true">
 
         <div className="modal__header">
           <div className="modal__title-group">
@@ -74,10 +74,12 @@ export default function AddExerciseModal({ onClose }) {
 
           <div className="field">
             <label className="field__label">Description</label>
-            <input className="input"
+            <textarea className="input exc-desc"
               placeholder="Short cue or muscle focus"
               value={form.description}
-              onChange={e => set('description', e.target.value)} />
+              onChange={e => set('description', e.target.value)}
+              rows={3}
+            />
           </div>
 
           <div className="log-meta-grid">

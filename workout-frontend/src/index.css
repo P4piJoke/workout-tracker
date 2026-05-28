@@ -1667,15 +1667,35 @@ a { color: inherit; text-decoration: none; }
 .stepper--md .stepper__display { min-width: 48px; padding: 0 0.4rem; }
 .stepper--sm .stepper__display { min-width: 38px; padding: 0 0.3rem; }
 
-.stepper__val {
+.stepper__input {
   font-family: var(--font-mono);
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.2;
+  background: transparent;
+  border: none;
+  text-align: center;
+  width: 100%;
+  outline: none;
+  padding: 0;
+  min-width: 0; /* Important: stops input from breaking flex layouts */
+  appearance: textfield; /* Firefox: hide up/down arrows */
 }
 
-.stepper--md .stepper__val { font-size: 0.9375rem; }
-.stepper--sm .stepper__val { font-size: 0.8125rem; }
+.stepper__input:focus {
+  color: var(--accent);
+}
+
+/* Chrome, Safari, Edge, Opera: hide up/down arrows */
+.stepper__input::-webkit-outer-spin-button,
+.stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Explicit widths ensure alignment looks clean in both sizes */
+.stepper--md .stepper__input { font-size: 0.9375rem; width: 44px; }
+.stepper--sm .stepper__input { font-size: 0.8125rem; width: 36px; }
 
 .stepper__unit {
   font-size: 0.57rem;
@@ -2077,4 +2097,8 @@ a { color: inherit; text-decoration: none; }
 /* wrap table in scroll container for narrow screens */
 .modal__body .modal__entry {
   overflow-x: auto;
+}
+
+.exc-desc {
+  resize: none;
 }

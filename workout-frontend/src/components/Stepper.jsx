@@ -1,17 +1,5 @@
-/**
- * Stepper — replaces <input type="number"> everywhere.
- * No browser up/down arrows. Clean − VALUE + layout.
- *
- * Props:
- *   value     number   current value
- *   onChange  fn       called with new number
- *   min       number   minimum (default 0)
- *   max       number   maximum (optional)
- *   step      number   increment size (default 1)
- *   unit      string   label shown below value (optional, e.g. "kg", "reps")
- *   label     string   label shown above the control (optional)
- *   size      string   "sm" | "md" (default "md")
- */
+import { useState, useEffect } from 'react';
+
 export default function Stepper({
   value,
   onChange,
@@ -22,18 +10,51 @@ export default function Stepper({
   label,
   size = 'md',
 }) {
+  // Local state allows the user to clear the input or type without instantly updating the parent
+  const [inputValue, setInputValue] = useState(value);
+
+  // Sync with parent value if it changes externally
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
   const canDec = value > min;
   const canInc = max === undefined || value < max;
 
   const dec = () => {
     if (!canDec) return;
-    // round to avoid floating-point drift (e.g. 2.5 + 2.5 = 5.000000001)
     onChange(Math.round((value - step) * 1000) / 1000);
   };
 
   const inc = () => {
     if (!canInc) return;
     onChange(Math.round((value + step) * 1000) / 1000);
+  };
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleBlur = () => {
+    let parsed = parseFloat(inputValue);
+
+    // Fallback to current saved value if input is empty or invalid
+    if (isNaN(parsed)) {
+      parsed = value;
+    } else {
+      // Clamp to min/max
+      if (parsed < min) parsed = min;
+      if (max !== undefined && parsed > max) parsed = max;
+    }
+
+    onChange(parsed);
+    setInputValue(parsed); // Re-sync local state to clamped value
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur(); // Trigger blur logic to save and clamp
+    }
   };
 
   return (
@@ -52,7 +73,18 @@ export default function Stepper({
         </button>
 
         <div className="stepper__display">
-          <span className="stepper__val">{value}</span>
+          {/* Replaced .stepper__val span with a number input */}
+          <input
+            type="number"
+            className="stepper__input"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            min={min}
+            max={max}
+            step={step}
+          />
           {unit && <span className="stepper__unit">{unit}</span>}
         </div>
 
