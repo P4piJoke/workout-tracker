@@ -161,7 +161,7 @@ export default function LogWorkoutPage() {
               <div className="entry-block__body">
                 {/* column headers */}
                 <div className="set-row set-row--header">
-                  <span className="set-row__num" />
+                  <span className="set-row__num">#</span>
                   <span className="set-row__col-label">Reps</span>
                   <span className="set-row__col-label">Weight</span>
                   <span className="set-row__col-label">Type</span>
