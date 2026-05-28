@@ -13,4 +13,6 @@ public interface ExerciseService {
     List<Exercise> search(String query);
 
     List<Exercise> getAll(MuscleGroup muscle, ExerciseType type);
+
+    void delete(String id);
 }

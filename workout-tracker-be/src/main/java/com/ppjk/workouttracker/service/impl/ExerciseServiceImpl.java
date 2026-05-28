@@ -46,4 +46,10 @@ public class ExerciseServiceImpl implements ExerciseService {
 
         return exerciseMongoRepository.findAll();
     }
+
+    @Override
+    public void delete(String id) {
+        exerciseMongoRepository.deleteById(id);
+        searchRepository.deleteById(id);    // remove from both stores
+    }
 }

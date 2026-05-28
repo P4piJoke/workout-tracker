@@ -17,8 +17,15 @@ const TYPE_LABEL = {
   FLEXIBILITY: 'Flexibility',
 };
 
-export default function ExerciseCard({ exercise }) {
+export default function ExerciseCard({ exercise, isAdmin, onDelete }) {
   const color = MUSCLE_COLOR[exercise.primaryMuscle] ?? '#c8ff3c';
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete "${exercise.name}"? This cannot be undone.`)) {
+      onDelete(exercise.id);
+    }
+  };
 
   return (
     <article className="ex-card">
@@ -41,13 +48,26 @@ export default function ExerciseCard({ exercise }) {
           {TYPE_LABEL[exercise.type] ?? exercise.type}
         </span>
 
-        {exercise.secondaryMuscles?.length > 0 && (
-          <div className="ex-card__secondary">
-            {exercise.secondaryMuscles.map(m => (
-              <span key={m} className="ex-card__sec-chip">{m}</span>
-            ))}
-          </div>
-        )}
+        <div className="ex-card__footer-right">
+          {exercise.secondaryMuscles?.length > 0 && (
+            <div className="ex-card__secondary">
+              {exercise.secondaryMuscles.map(m => (
+                <span key={m} className="ex-card__sec-chip">{m}</span>
+              ))}
+            </div>
+          )}
+
+          {isAdmin && (
+            <button
+              className="ex-card__delete"
+              onClick={handleDelete}
+              aria-label={`Delete ${exercise.name}`}
+              title="Delete exercise"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );

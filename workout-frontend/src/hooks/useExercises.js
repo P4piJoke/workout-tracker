@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/axiosClient';
 
 export function useExerciseSearch(query) {
@@ -15,13 +15,23 @@ export function useExerciseSearch(query) {
 
 export function useAllExercises({ muscle, type } = {}) {
   return useQuery({
-    queryKey:  ['exercises', 'all', muscle, type],
-    queryFn:   () => {
+    queryKey: ['exercises', 'all', muscle, type],
+    queryFn:  () => {
       const params = {};
       if (muscle) params.muscle = muscle;
       if (type)   params.type   = type;
       return apiClient.get('/api/exercises', { params }).then(r => r.data);
     },
     staleTime: 60_000,
+  });
+}
+
+export function useDeleteExercise() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/exercises/${id}`),
+    onSuccess:  () => {
+      qc.invalidateQueries({ queryKey: ['exercises'] });
+    },
   });
 }
