@@ -1,5 +1,6 @@
 package com.ppjk.workouttracker.service.impl;
 
+import com.ppjk.workouttracker.config.CacheConfig;
 import com.ppjk.workouttracker.config.SecurityUtils;
 import com.ppjk.workouttracker.domain.SetType;
 import com.ppjk.workouttracker.domain.Workout;
@@ -12,6 +13,8 @@ import com.ppjk.workouttracker.dto.WorkoutSetRequest;
 import com.ppjk.workouttracker.repository.mongo.WorkoutRepository;
 import com.ppjk.workouttracker.service.WorkoutService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,6 +30,11 @@ public class WorkoutServiceImpl implements WorkoutService {
     private final WorkoutRepository workoutRepository;
 
     @Override
+    @CacheEvict(value = {
+            CacheConfig.PERSONAL_RECORDS,
+            CacheConfig.MUSCLE_BALANCE,
+            CacheConfig.OVERLOAD
+    }, key = "@securityUtils.currentUserId()")
     public WorkoutResponse create(WorkoutRequest req) {
         String userId = SecurityUtils.currentUserId();
 
@@ -69,6 +77,16 @@ public class WorkoutServiceImpl implements WorkoutService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.PERSONAL_RECORDS,
+                    key = "@securityUtils.currentUserId()"),
+            @CacheEvict(value = CacheConfig.MUSCLE_BALANCE,
+                    key = "@securityUtils.currentUserId()"),
+            @CacheEvict(value = CacheConfig.OVERLOAD,
+                    key = "@securityUtils.currentUserId()"),
+            @CacheEvict(value = CacheConfig.EXERCISE_PROGRESS,
+                    allEntries = true)   // ← can't predict which exerciseId changed
+    })
     public WorkoutResponse update(String id, WorkoutRequest req) {
         var workout = workoutRepository
                 .findByIdAndUserId(id, SecurityUtils.currentUserId())
@@ -84,6 +102,16 @@ public class WorkoutServiceImpl implements WorkoutService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.PERSONAL_RECORDS,
+                    key = "@securityUtils.currentUserId()"),
+            @CacheEvict(value = CacheConfig.MUSCLE_BALANCE,
+                    key = "@securityUtils.currentUserId()"),
+            @CacheEvict(value = CacheConfig.OVERLOAD,
+                    key = "@securityUtils.currentUserId()"),
+            @CacheEvict(value = CacheConfig.EXERCISE_PROGRESS,
+                    allEntries = true)
+    })
     public void delete(String id) {
         var workout = workoutRepository
                 .findByIdAndUserId(id, SecurityUtils.currentUserId())
@@ -92,8 +120,6 @@ public class WorkoutServiceImpl implements WorkoutService {
 
         workoutRepository.delete(workout);
     }
-
-    // --- private helpers ---
 
     private List<WorkoutEntry> mapEntries(List<WorkoutEntryRequest> reqs) {
         return reqs.stream()

@@ -1,5 +1,6 @@
 package com.ppjk.workouttracker.service.impl;
 
+import com.ppjk.workouttracker.config.CacheConfig;
 import com.ppjk.workouttracker.config.SecurityUtils;
 import com.ppjk.workouttracker.domain.Exercise;
 import com.ppjk.workouttracker.domain.MuscleGroup;
@@ -9,9 +10,11 @@ import com.ppjk.workouttracker.dto.ProgressTrend;
 import com.ppjk.workouttracker.dto.RecommendationType;
 import com.ppjk.workouttracker.repository.mongo.ExerciseMongoRepository;
 import com.ppjk.workouttracker.repository.mongo.WorkoutRepository;
+import com.ppjk.workouttracker.service.ExercisePreferencesService;
 import com.ppjk.workouttracker.service.ProgressiveOverloadService;
 import com.ppjk.workouttracker.service.UserPreferencesService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,31 +32,31 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
     private final WorkoutRepository workoutRepository;
     private final ExerciseMongoRepository exerciseMongoRepository;
     private final UserPreferencesService preferencesService;
-    private static final int    WINDOW      = 5;    // sessions to inspect for stall
+    private final ExercisePreferencesService exercisePreferencesService;
+    private static final int WINDOW = 5;
 
-    // kg to add when the user earns a weight increase, by muscle group
     private static final Map<MuscleGroup, Double> INCREMENT = Map.ofEntries(
-            Map.entry(MuscleGroup.CHEST,     2.5),
-            Map.entry(MuscleGroup.BACK,      2.5),
+            Map.entry(MuscleGroup.CHEST, 2.5),
+            Map.entry(MuscleGroup.BACK, 2.5),
             Map.entry(MuscleGroup.SHOULDERS, 2.5),
-            Map.entry(MuscleGroup.BICEPS,    2.5),
-            Map.entry(MuscleGroup.TRICEPS,   2.5),
-            Map.entry(MuscleGroup.FOREARMS,  2.5),
-            Map.entry(MuscleGroup.LEGS,      5.0),
-            Map.entry(MuscleGroup.GLUTES,    5.0),
-            Map.entry(MuscleGroup.CALVES,    2.5),
-            Map.entry(MuscleGroup.CORE,      0.0)
+            Map.entry(MuscleGroup.BICEPS, 2.5),
+            Map.entry(MuscleGroup.TRICEPS, 2.5),
+            Map.entry(MuscleGroup.FOREARMS, 2.5),
+            Map.entry(MuscleGroup.LEGS, 5.0),
+            Map.entry(MuscleGroup.GLUTES, 5.0),
+            Map.entry(MuscleGroup.CALVES, 2.5),
+            Map.entry(MuscleGroup.CORE, 0.0)
     );
 
     @Override
+    @Cacheable(value = CacheConfig.OVERLOAD,
+            key = "@securityUtils.currentUserId()")
     public List<OverloadRecommendation> recommendations() {
-        var prefs    = preferencesService.getOrDefault();  // ← per-user
-        int targetMin = prefs.getTargetRepsMin();
-        int targetMax = prefs.getTargetRepsMax();
+        var globalPrefs = preferencesService.getOrDefault();
+        var exercisePrefsMap = exercisePreferencesService.getAllAsMap();
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());
 
-        // group sessions chronologically per exercise (desc from query, so index 0 = latest)
         Map<String, List<SessionSnapshot>> byExercise = new LinkedHashMap<>();
         for (var workout : workouts) {
             for (var entry : workout.getEntries()) {
@@ -64,32 +67,42 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
             }
         }
 
-        // batch-load exercises for muscle-group-aware increments
         Map<String, Exercise> exerciseById = exerciseMongoRepository
                 .findAllById(byExercise.keySet()).stream()
                 .collect(Collectors.toMap(Exercise::getId, e -> e));
 
         return byExercise.entrySet().stream()
-                .map(e -> analyze(
-                        e.getKey(), e.getValue(),
-                        incrementFor(exerciseById.get(e.getKey())), targetMin, targetMax))
-                .sorted(Comparator.comparingInt(r -> r.trend().ordinal()))  // IMPROVING first
+                .map(e -> {
+
+                    var exPrefs = exercisePrefsMap.get(e.getKey());
+                    int targetMin = exPrefs != null
+                            ? exPrefs.getTargetRepsMin()
+                            : globalPrefs.getTargetRepsMin();
+                    int targetMax = exPrefs != null
+                            ? exPrefs.getTargetRepsMax()
+                            : globalPrefs.getTargetRepsMax();
+
+                    return analyze(
+                            e.getKey(), e.getValue(),
+                            incrementFor(exerciseById.get(e.getKey())),
+                            targetMin, targetMax);
+                })
+                .sorted(Comparator.comparingInt(r -> r.trend().ordinal()))
                 .toList();
     }
 
-    // ── Core analysis ────────────────────────────────────────────
     private OverloadRecommendation analyze(
             String exerciseId,
             List<SessionSnapshot> sessions,   // index 0 = most recent
             double increment,
             int targetMin,      // ← was TARGET_MIN
-            int targetMax){
+            int targetMax) {
 
         var last = sessions.get(0);
-        String name     = last.exerciseName();
+        String name = last.exerciseName();
         double lastMaxW = maxWeight(last);
-        int    avgReps  = avgReps(last);
-        int    sets     = last.sets().size();
+        int avgReps = avgReps(last);
+        int sets = last.sets().size();
 
         if (sessions.size() == 1) {
             return rec(exerciseId, name, RecommendationType.BASELINE, ProgressTrend.NEW,
@@ -97,30 +110,30 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
                     "First session recorded — use this as your baseline.");
         }
 
-        var prev       = sessions.get(1);
+        var prev = sessions.get(1);
         double prevMaxW = maxWeight(prev);
 
-        // detect trend
         ProgressTrend trend;
-        long          stallCount = 0;
+        long stallCount = 0;
         if (lastMaxW > prevMaxW) {
             trend = ProgressTrend.IMPROVING;
         } else if (lastMaxW < prevMaxW) {
             trend = ProgressTrend.DECLINING;
         } else {
-            // same weight — count how many recent sessions share it
             stallCount = sessions.stream()
                     .limit(WINDOW)
                     .filter(s -> maxWeight(s) == lastMaxW)
                     .count();
-            trend = stallCount >= 2 ? ProgressTrend.STALLING : ProgressTrend.IMPROVING;
+            boolean repsAtCeiling = avgReps >= targetMax;
+            trend = (!repsAtCeiling && stallCount >= 2)
+                    ? ProgressTrend.STALLING
+                    : ProgressTrend.IMPROVING;
         }
 
         return switch (trend) {
 
             case IMPROVING -> {
                 if (avgReps >= targetMax) {
-                    // earned a weight jump
                     yield rec(exerciseId, name,
                             RecommendationType.INCREASE_WEIGHT, trend,
                             lastMaxW, lastMaxW + increment,
@@ -130,7 +143,6 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
                                             "and target %d reps next session.",
                                     avgReps, lastMaxW, lastMaxW + increment, targetMin));
                 } else {
-                    // still room to add reps at current load
                     int targetReps = Math.min(avgReps + 1, targetMax);
                     yield rec(exerciseId, name,
                             RecommendationType.INCREASE_REPS, trend,
@@ -143,7 +155,6 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
             }
 
             case STALLING -> {
-                // round deload to nearest 2.5 kg plate
                 double deload = Math.round((lastMaxW * 0.9) / 2.5) * 2.5;
                 yield rec(exerciseId, name,
                         RecommendationType.DELOAD, trend,
@@ -155,16 +166,14 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
                                 lastMaxW, stallCount, deload, targetMax));
             }
 
-            case DECLINING -> {
-                yield rec(exerciseId, name,
-                        RecommendationType.MAINTAIN, trend,
-                        lastMaxW, prevMaxW,
-                        avgReps, targetMin, sets, 0,
-                        String.format(
-                                "Weight dropped %.1f → %.1f kg. " +
-                                        "Return to %.1f kg and focus on controlled reps.",
-                                prevMaxW, lastMaxW, prevMaxW));
-            }
+            case DECLINING -> rec(exerciseId, name,
+                    RecommendationType.MAINTAIN, trend,
+                    lastMaxW, prevMaxW,
+                    avgReps, targetMin, sets, 0,
+                    String.format(
+                            "Weight dropped %.1f → %.1f kg. " +
+                                    "Return to %.1f kg and focus on controlled reps.",
+                            prevMaxW, lastMaxW, prevMaxW));
 
             default -> rec(exerciseId, name,
                     RecommendationType.MAINTAIN, trend,
@@ -172,7 +181,6 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
         };
     }
 
-    // ── Helpers ──────────────────────────────────────────────────
     private double maxWeight(SessionSnapshot s) {
         return s.sets().stream().mapToDouble(WorkoutSet::getWeightKg).max().orElse(0);
     }
@@ -196,7 +204,7 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
                 lastReps, targetReps, sets, stall, rationale);
     }
 
-    // package-private snapshot — not a DTO
     private record SessionSnapshot(
-            LocalDate date, String exerciseName, List<WorkoutSet> sets) {}
+            LocalDate date, String exerciseName, List<WorkoutSet> sets) {
+    }
 }

@@ -13,10 +13,14 @@ services:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports: ["9200:9200"]
 
+  redis:                          # ← new
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes:
+      - redis_data:/data
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.4
-    # --spi-theme-static-max-age=-1 disables theme caching during dev
-    # so changes to .ftl / .css files apply on page refresh
     command: start-dev --import-realm --spi-theme-static-max-age=-1
     environment:
       KEYCLOAK_ADMIN: admin
@@ -24,7 +28,8 @@ services:
     ports: ["8180:8080"]
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
-      - ./keycloak/themes:/opt/keycloak/themes     # ← custom theme mount
+      - ./keycloak/themes:/opt/keycloak/themes
 
 volumes:
   mongo_data:
+  redis_data:                     # ← new

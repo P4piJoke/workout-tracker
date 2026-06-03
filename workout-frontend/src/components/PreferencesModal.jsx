@@ -1,23 +1,27 @@
 import { useState, useEffect } from 'react';
 import { usePreferences, useUpdatePreferences } from '../hooks/usePreferences';
 import Stepper from './Stepper';
+import { useDeleteExercisePreference, useExercisePreferences } from '../hooks/useExercisePreferences';
 
 function repRangeLabel(min, max) {
-  if (max <= 5)  return 'Max strength';
-  if (max <= 8)  return 'Strength';
+  if (max <= 5) return 'Max strength';
+  if (max <= 8) return 'Strength';
   if (max <= 12) return 'Strength / hypertrophy';
   if (max <= 20) return 'Hypertrophy / endurance';
   return 'Endurance';
 }
 
 export default function PreferencesModal({ onClose }) {
-  const { data: prefs }                      = usePreferences();
+  const { data: prefs } = usePreferences();
   const { mutate: save, isPending, isError } = useUpdatePreferences();
+  const { data: exercisePrefs = [] } = useExercisePreferences();
+  const { mutate: deleteExPref } = useDeleteExercisePreference();
+
 
   const [form, setForm] = useState({
     targetRepsMin: 8,
     targetRepsMax: 12,
-    defaultSets:   3,
+    defaultSets: 3,
   });
 
   // populate once prefs load
@@ -25,7 +29,7 @@ export default function PreferencesModal({ onClose }) {
     if (prefs) setForm({
       targetRepsMin: prefs.targetRepsMin,
       targetRepsMax: prefs.targetRepsMax,
-      defaultSets:   prefs.defaultSets,
+      defaultSets: prefs.defaultSets,
     });
   }, [prefs]);
 
@@ -79,7 +83,7 @@ export default function PreferencesModal({ onClose }) {
                 <div
                   className="pref-range-fill"
                   style={{
-                    left:  `${(form.targetRepsMin / 30) * 100}%`,
+                    left: `${(form.targetRepsMin / 30) * 100}%`,
                     right: `${100 - (form.targetRepsMax / 30) * 100}%`,
                   }}
                 />
@@ -98,20 +102,19 @@ export default function PreferencesModal({ onClose }) {
             {/* preset chips */}
             <div className="pref-presets">
               {[
-                { label: '1–5',   sub: 'Max strength',  min: 1,  max: 5  },
-                { label: '4–6',   sub: 'Strength',      min: 4,  max: 6  },
-                { label: '6–8',   sub: 'Str/Hyper',     min: 6,  max: 8  },
-                { label: '8–12',  sub: 'Hypertrophy',   min: 8,  max: 12 },
-                { label: '12–15', sub: 'Hyper/Endur',   min: 12, max: 15 },
-                { label: '15–20', sub: 'Endurance',     min: 15, max: 20 },
+                { label: '1–5', sub: 'Max strength', min: 1, max: 5 },
+                { label: '4–6', sub: 'Strength', min: 4, max: 6 },
+                { label: '6–8', sub: 'Str/Hyper', min: 6, max: 8 },
+                { label: '8–12', sub: 'Hypertrophy', min: 8, max: 12 },
+                { label: '12–15', sub: 'Hyper/Endur', min: 12, max: 15 },
+                { label: '15–20', sub: 'Endurance', min: 15, max: 20 },
               ].map(p => (
                 <button
                   key={p.label}
                   type="button"
-                  className={`pref-preset ${
-                    form.targetRepsMin === p.min && form.targetRepsMax === p.max
-                      ? 'pref-preset--active' : ''
-                  }`}
+                  className={`pref-preset ${form.targetRepsMin === p.min && form.targetRepsMax === p.max
+                    ? 'pref-preset--active' : ''
+                    }`}
                   onClick={() => setForm(f => ({
                     ...f, targetRepsMin: p.min, targetRepsMax: p.max,
                   }))}
@@ -139,6 +142,33 @@ export default function PreferencesModal({ onClose }) {
               />
             </div>
           </div>
+
+          {exercisePrefs.length > 0 && (
+            <div className="pref-section">
+              <div className="pref-section__header">
+                <span className="pref-section__title">Per-exercise overrides</span>
+                <span className="pref-section__tag">Set from the Overload page</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {exercisePrefs.map(p => (
+                  <div key={p.exerciseId} className="pref-override-row">
+                    <span className="pref-override-row__name">{p.exerciseName}</span>
+                    <span className="pref-override-row__range">
+                      {p.targetRepsMin}–{p.targetRepsMax} reps
+                    </span>
+                    <button
+                      className="btn btn--danger btn--sm"
+                      onClick={() => deleteExPref(p.exerciseId)}
+                      title="Remove override — reverts to global range"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isError && (
             <p className="form-error">Failed to save — please try again.</p>

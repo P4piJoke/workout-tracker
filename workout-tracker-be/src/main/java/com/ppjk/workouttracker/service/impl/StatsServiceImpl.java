@@ -1,5 +1,6 @@
 package com.ppjk.workouttracker.service.impl;
 
+import com.ppjk.workouttracker.config.CacheConfig;
 import com.ppjk.workouttracker.config.SecurityUtils;
 import com.ppjk.workouttracker.domain.Exercise;
 import com.ppjk.workouttracker.domain.WorkoutEntry;
@@ -11,6 +12,7 @@ import com.ppjk.workouttracker.repository.mongo.ExerciseMongoRepository;
 import com.ppjk.workouttracker.repository.mongo.WorkoutRepository;
 import com.ppjk.workouttracker.service.StatsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -28,6 +30,8 @@ public class StatsServiceImpl implements StatsService {
     private final ExerciseMongoRepository exerciseMongoRepository;
 
     @Override
+    @Cacheable(value = CacheConfig.PERSONAL_RECORDS,
+            key = "@securityUtils.currentUserId()")
     public List<PersonalRecord> personalRecords() {
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());
@@ -64,8 +68,9 @@ public class StatsServiceImpl implements StatsService {
                 .toList();
     }
 
-    // ── Exercise progress over time ───────────────────────────
     @Override
+    @Cacheable(value = CacheConfig.EXERCISE_PROGRESS,
+            key = "@securityUtils.currentUserId() + ':' + #exerciseId")
     public List<ExerciseProgressPoint> exerciseProgress(String exerciseId) {
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());
@@ -94,8 +99,9 @@ public class StatsServiceImpl implements StatsService {
                 .toList();
     }
 
-    // ── Muscle balance ────────────────────────────────────────
     @Override
+    @Cacheable(value = CacheConfig.MUSCLE_BALANCE,
+            key = "@securityUtils.currentUserId()")
     public List<MuscleBalanceEntry> muscleBalance() {
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());

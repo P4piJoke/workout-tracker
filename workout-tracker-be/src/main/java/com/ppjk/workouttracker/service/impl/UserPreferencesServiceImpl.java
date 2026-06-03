@@ -1,11 +1,13 @@
 package com.ppjk.workouttracker.service.impl;
 
+import com.ppjk.workouttracker.config.CacheConfig;
 import com.ppjk.workouttracker.config.SecurityUtils;
 import com.ppjk.workouttracker.domain.UserPreferences;
 import com.ppjk.workouttracker.dto.UserPreferencesRequest;
 import com.ppjk.workouttracker.repository.mongo.UserPreferencesRepository;
 import com.ppjk.workouttracker.service.UserPreferencesService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +26,8 @@ public class UserPreferencesServiceImpl implements UserPreferencesService {
     }
 
     @Override
+    @CacheEvict(value = CacheConfig.OVERLOAD,
+            key = "@securityUtils.currentUserId()")
     public UserPreferences update(UserPreferencesRequest req) {
         if (req.targetRepsMin() >= req.targetRepsMax())
             throw new ResponseStatusException(

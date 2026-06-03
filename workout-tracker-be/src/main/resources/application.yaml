@@ -2,15 +2,20 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/workout_tracker
-
     elasticsearch:
       uris: http://localhost:9200
+    redis:                        # ← new block
+      host: localhost
+      port: 6379
+
+  cache:
+    type: redis                   # ← tell Spring to use Redis as cache backend
 
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/workout-tracker   # Keycloak realm
+          issuer-uri: http://localhost:8180/realms/workout-tracker
 
 server:
   port: 8080
