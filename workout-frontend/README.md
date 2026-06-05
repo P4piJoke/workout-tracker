@@ -1,16 +1,36 @@
-# React + Vite
+Frontend: workout-frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Overview
+- React 19 single-page app built with Vite. Provides UI for logging workouts, viewing stats, managing exercises and preferences.
 
-Currently, two official plugins are available:
+Features
+- Dashboard with stats and progress charts
+- Exercise list and management
+- Log workout flow with modals and stepper
+- Workout heatmap and progress charts
+- Templates, personal records, and user preferences
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Key technologies
+- React 19, Vite
+- @tanstack/react-query for data fetching
+- axios for API calls
+- keycloak-js for authentication
+- recharts for charts
+- ESLint for linting
 
-## React Compiler
+Important files
+- Config & deps: [package.json](package.json#L1-L40)
+- Keycloak init: [src/auth/keycloak.js](src/auth/keycloak.js#L1-L120)
+- API client: [src/api/axiosClient.js](src/api/axiosClient.js#L1-L120)
+- Main entry: [src/main.jsx](src/main.jsx#L1-L120)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Run (development)
 
-## Expanding the ESLint configuration
+```bash
+cd workout-frontend
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Notes
+- Adjust Keycloak settings in `src/auth/keycloak.js` to match your Keycloak server.
