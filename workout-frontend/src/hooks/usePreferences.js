@@ -3,8 +3,8 @@ import apiClient from '../api/axiosClient';
 
 export function usePreferences() {
   return useQuery({
-    queryKey:  ['preferences'],
-    queryFn:   () => apiClient.get('/api/preferences').then(r => r.data),
+    queryKey: ['preferences'],
+    queryFn: () => apiClient.get('/api/preferences').then(r => r.data),
     staleTime: 300_000,  // preferences rarely change — cache 5 min
   });
 }

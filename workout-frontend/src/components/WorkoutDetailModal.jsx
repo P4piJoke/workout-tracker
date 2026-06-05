@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useUpdateWorkout, useDeleteWorkout } from '../hooks/useWorkouts';
+import DatePicker from './DatePicker';
 
 function volumeKg(sets) {
   return sets?.reduce((s, set) => s + set.reps * set.weightKg, 0) ?? 0;
@@ -16,9 +17,9 @@ const TYPE_LABEL = { WORKING: 'Work', WARMUP: 'Warm-up', DROPSET: 'Drop' };
 
 export default function WorkoutDetailModal({ workout, onClose }) {
   const { mutate: updateWorkout, isPending: isSaving } = useUpdateWorkout();
-  const { mutate: deleteWorkout }                       = useDeleteWorkout();
+  const { mutate: deleteWorkout } = useDeleteWorkout();
 
-  const [editing,  setEditing]  = useState(false);
+  const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState(() => deepClone(workout));
 
   useEffect(() => {
@@ -64,16 +65,16 @@ export default function WorkoutDetailModal({ workout, onClose }) {
   const handleSave = () => {
     updateWorkout(
       {
-        id:      workout.id,
-        name:    editData.name,
-        date:    editData.date,
+        id: workout.id,
+        name: editData.name,
+        date: editData.date,
         entries: editData.entries.map(e => ({
-          exerciseId:   e.exerciseId,
+          exerciseId: e.exerciseId,
           exerciseName: e.exerciseName,
           sets: e.sets.map(s => ({
-            reps:     s.reps,
+            reps: s.reps,
             weightKg: s.weightKg,
-            type:     s.type,
+            type: s.type,
           })),
         })),
       },
@@ -85,14 +86,14 @@ export default function WorkoutDetailModal({ workout, onClose }) {
     deleteWorkout(workout.id, { onSuccess: onClose });
   };
 
-  const displayData  = editing ? editData : workout;
-  const totalSets    = displayData.entries.reduce((s, e) => s + (e.sets?.length ?? 0), 0);
-  const totalVolume  = displayData.entries.reduce((s, e) => s + volumeKg(e.sets), 0);
+  const displayData = editing ? editData : workout;
+  const totalSets = displayData.entries.reduce((s, e) => s + (e.sets?.length ?? 0), 0);
+  const totalVolume = displayData.entries.reduce((s, e) => s + volumeKg(e.sets), 0);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}
-           role="dialog" aria-modal="true">
+        role="dialog" aria-modal="true">
 
         <div className="modal__header">
           <div className="modal__title-group">
@@ -105,13 +106,15 @@ export default function WorkoutDetailModal({ workout, onClose }) {
             ) : (
               <h2 className="modal__title">{workout.name}</h2>
             )}
+
+            {/* ── Date: custom DatePicker in edit mode, plain label otherwise ── */}
             {editing ? (
-              <input
-                className="input input--sm modal__date-input"
-                type="date"
-                value={editData.date}
-                onChange={e => setEditData(p => ({ ...p, date: e.target.value }))}
-              />
+              <div style={{ marginTop: '0.35rem' }}>
+                <DatePicker
+                  value={editData.date}
+                  onChange={v => setEditData(p => ({ ...p, date: v }))}
+                />
+              </div>
             ) : (
               <span className="modal__date">{workout.date}</span>
             )}
