@@ -68,6 +68,7 @@ public class CacheConfig {
      */
     private ObjectMapper cacheObjectMapper() {
         var ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfBaseType("com.ppjk.workouttracker")
                 .allowIfBaseType(Object.class)
                 .build();
 
@@ -76,7 +77,7 @@ public class CacheConfig {
                 .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .activateDefaultTypingAsProperty(
                         ptv,
-                        DefaultTyping.NON_FINAL,
+                        DefaultTyping.JAVA_LANG_OBJECT,
                         "@class"
                 )
                 .build();

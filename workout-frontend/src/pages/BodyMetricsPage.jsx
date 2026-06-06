@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, ReferenceLine,
+  ComposedChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import {
   useMetricsHistory,
@@ -28,7 +28,6 @@ function MetricsTooltip({ active, payload, label }) {
   );
 }
 
-// ── Summary stat card (reused pattern from DashboardStats) ────────────────────
 function MetricStat({ label, value, unit, accent, positive, negative }) {
   const valueColor = positive ? 'var(--accent)'
     : negative ? 'var(--danger)'
@@ -44,6 +43,20 @@ function MetricStat({ label, value, unit, accent, positive, negative }) {
   );
 }
 
+/**
+ * Compute a Y-axis domain with padding so the line doesn't hug the top/bottom.
+ * Without explicit domain, recharts auto-scale can collapse the axis when the
+ * value range is narrow (e.g. 79–81 kg), making the axis label invisible.
+ */
+function yDomain(data, key, padPct = 0.05) {
+  const vals = data.map(d => d[key]).filter(v => v != null);
+  if (vals.length === 0) return ['auto', 'auto'];
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const pad = Math.max((max - min) * padPct, 1); // at least 1 unit padding
+  return [Math.floor(min - pad), Math.ceil(max + pad)];
+}
+
 export default function BodyMetricsPage() {
   const { data: history = [], isLoading: histLoading } = useMetricsHistory();
   const { data: summary } = useMetricsSummary();
@@ -57,7 +70,6 @@ export default function BodyMetricsPage() {
     notes: '',
   });
   const [showFat, setShowFat] = useState(false);
-  const [metric, setMetric] = useState('weightKg');   // chart Y-axis toggle
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
 
@@ -71,15 +83,12 @@ export default function BodyMetricsPage() {
     setError('');
     logMetric(
       { ...form, bodyFatPct: showFat ? form.bodyFatPct : null },
-      { onSuccess: () => { setShowForm(false); } }
+      { onSuccess: () => setShowForm(false) }
     );
   };
 
-  // ── Derived chart data ────────────────────────────────────────────────────
-  // Build a merged list: weight on left Y-axis, body fat on right Y-axis.
-  // Points without body fat still render on the weight line.
   const chartData = history.map(p => ({
-    date: p.date.slice(5),   // show MM-DD
+    date: p.date.slice(5),
     fullDate: p.date,
     weightKg: p.weightKg,
     bodyFatPct: p.bodyFatPct,
@@ -87,18 +96,18 @@ export default function BodyMetricsPage() {
 
   const hasBodyFat = history.some(p => p.bodyFatPct != null);
 
-  // 30-day change formatting
+  const weightDomain = yDomain(chartData, 'weightKg');
+  const fatDomain = yDomain(chartData, 'bodyFatPct');
+
   const delta = summary?.weightChangeLast30Days;
   const deltaLabel = delta != null
     ? `${delta > 0 ? '+' : ''}${delta} kg`
     : '—';
 
-  // Recent entries for the log table (last 10)
   const recent = [...history].reverse().slice(0, 10);
 
   return (
     <section>
-      {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="dashboard__header">
         <div>
           <h1 className="dashboard__title">Body Metrics</h1>
@@ -114,29 +123,22 @@ export default function BodyMetricsPage() {
         </button>
       </div>
 
-      {/* ── Log form ───────────────────────────────────────────────────── */}
       {showForm && (
         <div className="chart-card" style={{ marginBottom: '2rem' }}>
           {error && <div className="form-error">{error}</div>}
-
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="field">
               <label className="field__label">Date</label>
               <DatePicker value={form.date} onChange={v => set('date', v)} />
             </div>
-
             <div className="field">
               <label className="field__label">Body weight</label>
               <Stepper
                 value={form.weightKg}
-                min={20}
-                max={300}
-                step={0.1}
-                unit="kg"
+                min={20} max={300} step={0.1} unit="kg"
                 onChange={v => set('weightKg', Math.round(v * 10) / 10)}
               />
             </div>
-
             <div className="field" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               <label className="field__label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 Body fat
@@ -155,15 +157,11 @@ export default function BodyMetricsPage() {
               {showFat && (
                 <Stepper
                   value={form.bodyFatPct ?? 20}
-                  min={3}
-                  max={60}
-                  step={0.1}
-                  unit="%"
+                  min={3} max={60} step={0.1} unit="%"
                   onChange={v => set('bodyFatPct', Math.round(v * 10) / 10)}
                 />
               )}
             </div>
-
             <div className="field" style={{ flex: 1, minWidth: 160 }}>
               <label className="field__label">Notes (optional)</label>
               <input
@@ -173,50 +171,28 @@ export default function BodyMetricsPage() {
                 onChange={e => set('notes', e.target.value)}
               />
             </div>
-
-            <button
-              className="btn btn--primary btn--sm"
-              onClick={handleSubmit}
-              disabled={isPending}
-            >
+            <button className="btn btn--primary btn--sm" onClick={handleSubmit} disabled={isPending}>
               {isPending ? 'Saving…' : 'Save entry'}
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Summary stats ──────────────────────────────────────────────── */}
       {summary && (
         <div className="stats-bar" style={{ marginBottom: '2rem' }}>
-          <MetricStat
-            label="Current weight"
+          <MetricStat label="Current weight"
             value={summary.latestWeight != null ? `${summary.latestWeight}` : null}
-            unit="kg"
-            accent
-          />
+            unit="kg" accent />
           {summary.latestBodyFat != null && (
-            <MetricStat
-              label="Body fat"
-              value={`${summary.latestBodyFat}`}
-              unit="%"
-            />
+            <MetricStat label="Body fat" value={`${summary.latestBodyFat}`} unit="%" />
           )}
-          <MetricStat
-            label="30-day change"
-            value={deltaLabel}
-            unit="body weight"
+          <MetricStat label="30-day change" value={deltaLabel} unit="body weight"
             positive={delta != null && delta < 0}
-            negative={delta != null && delta > 0}
-          />
-          <MetricStat
-            label="Entries logged"
-            value={summary.totalEntries}
-            unit="measurements"
-          />
+            negative={delta != null && delta > 0} />
+          <MetricStat label="Entries logged" value={summary.totalEntries} unit="measurements" />
         </div>
       )}
 
-      {/* ── Chart ──────────────────────────────────────────────────────── */}
       <div className="stats-section">
         <div className="stats-section__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
@@ -236,14 +212,10 @@ export default function BodyMetricsPage() {
 
           {chartData.length >= 2 && (
             <ResponsiveContainer width="100%" height={280}>
-              {/*
-                ComposedChart lets us mix Line (weight) + Line (body fat)
-                with two independent Y-axes — the classic dual-axis pattern.
-                The trick: yAxisId="left" / yAxisId="right" links each series
-                to its own scale so the body fat % line doesn't get squished
-                by the larger weight values.
-              */}
-              <ComposedChart data={chartData} margin={{ top: 8, right: 32, bottom: 0, left: 0 }}>
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 8, right: hasBodyFat ? 48 : 16, bottom: 0, left: 0 }}
+              >
                 <CartesianGrid stroke="#242424" strokeDasharray="4 4" vertical={false} />
 
                 <XAxis
@@ -253,36 +225,48 @@ export default function BodyMetricsPage() {
                   axisLine={{ stroke: '#242424' }}
                 />
 
-                {/* Left Y-axis — body weight in kg */}
+                {/* ── Left Y-axis — body weight ─────────────────────────────
+                    FIX: explicit domain + width so the axis never collapses.
+                    Recharts' 'auto' domain works poorly for narrow value ranges
+                    (e.g. all readings between 79–81 kg) — the rendered ticks
+                    overlap or disappear. We compute a padded domain instead.
+                ─────────────────────────────────────────────────────────── */}
                 <YAxis
                   yAxisId="left"
+                  domain={weightDomain}
                   tick={{ fill: '#8a8a8a', fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
-                  width={44}
-                  domain={['auto', 'auto']}
+                  width={52}
+                  tickFormatter={v => `${v}`}
+                  label={{
+                    value: 'kg',
+                    angle: -90,
+                    position: 'insideLeft',
+                    offset: 10,
+                    style: { fill: '#555', fontSize: 10 },
+                  }}
                 />
 
-                {/* Right Y-axis — body fat % — only rendered if we have data */}
                 {hasBodyFat && (
                   <YAxis
                     yAxisId="right"
                     orientation="right"
+                    domain={fatDomain}
                     tick={{ fill: '#8a8a8a', fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    width={36}
+                    width={40}
                     unit="%"
-                    domain={['auto', 'auto']}
                   />
                 )}
 
-                <Tooltip content={<MetricsTooltip />} cursor={{ stroke: '#383838' }} />
-                <Legend
-                  wrapperStyle={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}
+                <Tooltip
+                  content={<MetricsTooltip />}
+                  cursor={{ stroke: '#383838' }}
                 />
+                <Legend wrapperStyle={{ fontSize: '0.75rem', color: 'var(--text-muted)' }} />
 
-                {/* Weight line — always shown */}
                 <Line
                   yAxisId="left"
                   type="monotone"
@@ -295,7 +279,6 @@ export default function BodyMetricsPage() {
                   connectNulls
                 />
 
-                {/* Body fat line — only if user has logged it */}
                 {hasBodyFat && (
                   <Line
                     yAxisId="right"
@@ -316,11 +299,9 @@ export default function BodyMetricsPage() {
         </div>
       </div>
 
-      {/* ── Recent entries log ──────────────────────────────────────────── */}
       {recent.length > 0 && (
         <div className="stats-section">
           <h2 className="stats-section__title">Recent entries</h2>
-
           <div className="chart-card" style={{ padding: 0, overflow: 'hidden' }}>
             <table className="modal__set-table" style={{ width: '100%' }}>
               <thead>

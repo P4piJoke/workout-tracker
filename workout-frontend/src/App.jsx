@@ -7,6 +7,7 @@ import StatsPage from './pages/StatsPage';
 import OverloadPage from './pages/OverloadPage';
 import TemplatesPage from './pages/TemplatesPage';
 import BodyMetricsPage from './pages/BodyMetricsPage';
+import HealthCalculatorsPage from './pages/HealthCalculatorsPage';
 import PreferencesModal from './components/PreferencesModal';
 
 const NAV = [
@@ -17,6 +18,7 @@ const NAV = [
   { key: 'stats', label: 'Stats' },
   { key: 'overload', label: 'Overload' },
   { key: 'metrics', label: 'Body' },
+  { key: 'calculators', label: 'Calculators' },
 ];
 
 function GearIcon() {
@@ -45,13 +47,6 @@ function GearIcon() {
 export default function App() {
   const [page, setPage] = useState('dashboard');
   const [showPref, setShowPref] = useState(false);
-  /*
-   * Template → Log handoff.
-   * When the user clicks "Use →" on a template, we store the template in
-   * state and navigate to the Log page. LogWorkoutPage reads initialTemplate
-   * to pre-fill exercises. This is a simple prop-based handoff — no global
-   * state manager needed for this flow.
-   */
   const [initialTemplate, setInitialTemplate] = useState(null);
 
   const kc = useAuth();
@@ -61,7 +56,6 @@ export default function App() {
     setPage('log');
   };
 
-  // Clear template after the log page mounts with it
   const clearTemplate = () => setInitialTemplate(null);
 
   return (
@@ -116,6 +110,7 @@ export default function App() {
         {page === 'stats' && <StatsPage />}
         {page === 'overload' && <OverloadPage />}
         {page === 'metrics' && <BodyMetricsPage />}
+        {page === 'calculators' && <HealthCalculatorsPage />}
       </main>
 
       {showPref && <PreferencesModal onClose={() => setShowPref(false)} />}

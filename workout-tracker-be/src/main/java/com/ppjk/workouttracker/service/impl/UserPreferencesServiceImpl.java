@@ -40,6 +40,18 @@ public class UserPreferencesServiceImpl implements UserPreferencesService {
         prefs.setTargetRepsMin(req.targetRepsMin());
         prefs.setTargetRepsMax(req.targetRepsMax());
         prefs.setDefaultSets(req.defaultSets());
+
+        // ── Body fields — only update when supplied ────────────────────────
+        if (req.heightCm() != null) {
+            prefs.setHeightCm(req.heightCm());
+        }
+        if (req.sex() != null) {
+            prefs.setSex(req.sex());
+        }
+        if (req.activityLevel() != null) {
+            prefs.setActivityLevel(req.activityLevel());
+        }
+
         return repository.save(prefs);
     }
 
