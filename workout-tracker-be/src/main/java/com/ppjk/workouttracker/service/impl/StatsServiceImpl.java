@@ -6,8 +6,11 @@ import com.ppjk.workouttracker.domain.Exercise;
 import com.ppjk.workouttracker.domain.WorkoutEntry;
 import com.ppjk.workouttracker.domain.WorkoutSet;
 import com.ppjk.workouttracker.dto.ExerciseProgressPoint;
+import com.ppjk.workouttracker.dto.ExerciseProgressResponse;
 import com.ppjk.workouttracker.dto.MuscleBalanceEntry;
+import com.ppjk.workouttracker.dto.MuscleBalanceResponse;
 import com.ppjk.workouttracker.dto.PersonalRecord;
+import com.ppjk.workouttracker.dto.PersonalRecordResponse;
 import com.ppjk.workouttracker.repository.mongo.ExerciseMongoRepository;
 import com.ppjk.workouttracker.repository.mongo.WorkoutRepository;
 import com.ppjk.workouttracker.service.StatsService;
@@ -15,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +36,7 @@ public class StatsServiceImpl implements StatsService {
     @Override
     @Cacheable(value = CacheConfig.PERSONAL_RECORDS,
             key = "@securityUtils.currentUserId()")
-    public List<PersonalRecord> personalRecords() {
+    public PersonalRecordResponse personalRecords() {
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());
 
@@ -63,19 +67,20 @@ public class StatsServiceImpl implements StatsService {
             }
         }
 
-        return best.values().stream()
+        List<PersonalRecord> list = best.values().stream()
                 .sorted(Comparator.comparing(PersonalRecord::exerciseName))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+        return new PersonalRecordResponse(list);
     }
 
     @Override
     @Cacheable(value = CacheConfig.EXERCISE_PROGRESS,
             key = "@securityUtils.currentUserId() + ':' + #exerciseId")
-    public List<ExerciseProgressPoint> exerciseProgress(String exerciseId) {
+    public ExerciseProgressResponse exerciseProgress(String exerciseId) {
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());
 
-        return workouts.stream()
+        List<ExerciseProgressPoint> list = workouts.stream()
                 .filter(w -> w.getEntries().stream()
                         .anyMatch(e -> exerciseId.equals(e.getExerciseId())))
                 .map(w -> {
@@ -96,13 +101,14 @@ public class StatsServiceImpl implements StatsService {
                     );
                 })
                 .sorted(Comparator.comparing(ExerciseProgressPoint::date))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+        return new ExerciseProgressResponse(list);
     }
 
     @Override
     @Cacheable(value = CacheConfig.MUSCLE_BALANCE,
             key = "@securityUtils.currentUserId()")
-    public List<MuscleBalanceEntry> muscleBalance() {
+    public MuscleBalanceResponse muscleBalance() {
         var workouts = workoutRepository
                 .findByUserIdOrderByDateDesc(SecurityUtils.currentUserId());
 
@@ -126,9 +132,10 @@ public class StatsServiceImpl implements StatsService {
                 counts.merge(muscle, e.getSets().size(), Integer::sum);
         }));
 
-        return counts.entrySet().stream()
+        ArrayList<MuscleBalanceEntry> list = counts.entrySet().stream()
                 .map(en -> new MuscleBalanceEntry(en.getKey(), en.getValue()))
                 .sorted(Comparator.comparing(MuscleBalanceEntry::sets).reversed())
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+        return new MuscleBalanceResponse(list);
     }
 }

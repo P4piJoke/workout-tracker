@@ -23,3 +23,8 @@ server:
 client:
   allowed-origins: http://localhost:5173
   cors-pattern: /api/**
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+    org.springframework.cache: TRACE

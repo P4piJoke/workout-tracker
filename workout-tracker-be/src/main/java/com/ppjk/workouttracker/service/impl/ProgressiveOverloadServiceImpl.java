@@ -6,6 +6,7 @@ import com.ppjk.workouttracker.domain.Exercise;
 import com.ppjk.workouttracker.domain.MuscleGroup;
 import com.ppjk.workouttracker.domain.WorkoutSet;
 import com.ppjk.workouttracker.dto.OverloadRecommendation;
+import com.ppjk.workouttracker.dto.OverloadRecommendationResponse;
 import com.ppjk.workouttracker.dto.ProgressTrend;
 import com.ppjk.workouttracker.dto.RecommendationType;
 import com.ppjk.workouttracker.repository.mongo.ExerciseMongoRepository;
@@ -51,7 +52,7 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
     @Override
     @Cacheable(value = CacheConfig.OVERLOAD,
             key = "@securityUtils.currentUserId()")
-    public List<OverloadRecommendation> recommendations() {
+    public OverloadRecommendationResponse overloadRecommendations() {
         var globalPrefs = preferencesService.getOrDefault();
         var exercisePrefsMap = exercisePreferencesService.getAllAsMap();
         var workouts = workoutRepository
@@ -71,7 +72,7 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
                 .findAllById(byExercise.keySet()).stream()
                 .collect(Collectors.toMap(Exercise::getId, e -> e));
 
-        return byExercise.entrySet().stream()
+        ArrayList<OverloadRecommendation> list = byExercise.entrySet().stream()
                 .map(e -> {
 
                     var exPrefs = exercisePrefsMap.get(e.getKey());
@@ -88,7 +89,9 @@ public class ProgressiveOverloadServiceImpl implements ProgressiveOverloadServic
                             targetMin, targetMax);
                 })
                 .sorted(Comparator.comparingInt(r -> r.trend().ordinal()))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        return new OverloadRecommendationResponse(list);
     }
 
     private OverloadRecommendation analyze(

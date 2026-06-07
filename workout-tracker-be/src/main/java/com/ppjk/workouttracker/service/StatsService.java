@@ -1,14 +1,12 @@
 package com.ppjk.workouttracker.service;
 
-import com.ppjk.workouttracker.dto.ExerciseProgressPoint;
-import com.ppjk.workouttracker.dto.MuscleBalanceEntry;
-import com.ppjk.workouttracker.dto.PersonalRecord;
-
-import java.util.List;
+import com.ppjk.workouttracker.dto.ExerciseProgressResponse;
+import com.ppjk.workouttracker.dto.MuscleBalanceResponse;
+import com.ppjk.workouttracker.dto.PersonalRecordResponse;
 
 public interface StatsService {
 
-    List<PersonalRecord> personalRecords();
-    List<ExerciseProgressPoint> exerciseProgress(String exerciseId);
-    List<MuscleBalanceEntry> muscleBalance();
+    PersonalRecordResponse personalRecords();
+    ExerciseProgressResponse exerciseProgress(String exerciseId);
+    MuscleBalanceResponse muscleBalance();
 }

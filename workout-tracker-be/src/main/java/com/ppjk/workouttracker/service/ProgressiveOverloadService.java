@@ -1,10 +1,8 @@
 package com.ppjk.workouttracker.service;
 
-import com.ppjk.workouttracker.dto.OverloadRecommendation;
-
-import java.util.List;
+import com.ppjk.workouttracker.dto.OverloadRecommendationResponse;
 
 public interface ProgressiveOverloadService {
 
-    List<OverloadRecommendation> recommendations();
+    OverloadRecommendationResponse overloadRecommendations();
 }

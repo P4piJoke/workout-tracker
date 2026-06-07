@@ -25,22 +25,22 @@ public class StatsController {
 
     @GetMapping("/overload")
     public List<OverloadRecommendation> overloadRecommendations() {
-        return overloadService.recommendations();
+        return overloadService.overloadRecommendations().recommendations();
     }
 
     @GetMapping("/personal-records")
     public List<PersonalRecord> personalRecords() {
-        return statsService.personalRecords();
+        return statsService.personalRecords().records();
     }
 
     @GetMapping("/exercise-progress")
     public List<ExerciseProgressPoint> exerciseProgress(
             @RequestParam String exerciseId) {
-        return statsService.exerciseProgress(exerciseId);
+        return statsService.exerciseProgress(exerciseId).points();
     }
 
     @GetMapping("/muscle-balance")
     public List<MuscleBalanceEntry> muscleBalance() {
-        return statsService.muscleBalance();
+        return statsService.muscleBalance().balances();
     }
 }
