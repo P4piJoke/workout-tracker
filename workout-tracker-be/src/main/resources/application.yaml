@@ -17,6 +17,19 @@ spring:
         jwt:
           issuer-uri: http://localhost:8180/realms/workout-tracker
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_ADDRESS}    # replace
+    password: ${GMAIL_APP_PASSWORD}             # replace — 16-char App Password from Google account
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
 server:
   port: 8080
 
@@ -28,3 +41,8 @@ logging:
   level:
     org.springframework.data.redis: DEBUG
     org.springframework.cache: TRACE
+
+digest:
+  from-address: ${GMAIL_ADDRESS}  # same as spring.mail.username
+  cron: "0 0 8 * * MON"                          # every Monday at 08:00 server time
+  mev-threshold: 6

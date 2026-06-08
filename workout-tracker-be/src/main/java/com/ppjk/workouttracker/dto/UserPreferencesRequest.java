@@ -9,8 +9,12 @@ public record UserPreferencesRequest(
         @Min(1) @Max(10) int defaultSets,
 
         // ── Optional body fields ────────────────────────────────────────
-        Integer heightCm,      // null = not set yet
-        String sex,           // "MALE" | "FEMALE" | null
-        String activityLevel  // "SEDENTARY" | "LIGHT" | "MODERATE" | "ACTIVE" | "VERY_ACTIVE" | null
-) {
-}
+        Integer heightCm,
+        String sex,
+        String activityLevel,
+
+        // ── Weekly digest opt-out ───────────────────────────────────────
+        // Nullable so existing callers that don't send this field keep their
+        // current preference. True/false when explicitly set by the user.
+        Boolean weeklyDigestEnabled
+) {}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Weekly Workout Digest</title>
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                   Helvetica, Arial, sans-serif;
+      background: #f4f4f5;
+      color: #18181b;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Outer wrapper ──────────────────────────────────────────────── */
+    .wrapper {
+      max-width: 580px;
+      margin: 32px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e4e4e7;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .header {
+      background: #18181b;
+      padding: 28px 32px;
+      text-align: left;
+    }
+
+    .header__brand {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .header__brand span { color: #c8ff3c; }
+
+    .header__sub {
+      font-size: 12px;
+      color: #71717a;
+      margin-top: 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Body ───────────────────────────────────────────────────────── */
+    .body {
+      padding: 32px;
+    }
+
+    .greeting {
+      font-size: 22px;
+      font-weight: 700;
+      color: #18181b;
+      margin-bottom: 4px;
+    }
+
+    .week-range {
+      font-size: 13px;
+      color: #71717a;
+      margin-bottom: 28px;
+    }
+
+    /* ── Stats row ──────────────────────────────────────────────────── */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: #f4f4f5;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-box__value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #18181b;
+      line-height: 1;
+      display: block;
+    }
+
+    .stat-box__label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #71717a;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ── Section ────────────────────────────────────────────────────── */
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section__title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #71717a;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e4e4e7;
+    }
+
+    /* ── PR list ────────────────────────────────────────────────────── */
+    .pr-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pr-item__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #15803d;
+    }
+
+    .pr-item__detail {
+      font-size: 13px;
+      color: #166534;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pr-item__1rm {
+      font-size: 11px;
+      color: #4ade80;
+      display: block;
+      text-align: right;
+    }
+
+    /* ── Muscle table ───────────────────────────────────────────────── */
+    .muscle-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f4f4f5;
+    }
+
+    .muscle-row:last-child { border-bottom: none; }
+
+    .muscle-row__name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #18181b;
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    .muscle-row__bar-wrap {
+      flex: 1;
+      background: #e4e4e7;
+      border-radius: 4px;
+      height: 8px;
+      margin: 0 12px;
+      overflow: hidden;
+    }
+
+    .muscle-row__bar {
+      height: 100%;
+      border-radius: 4px;
+      background: #18181b;
+    }
+
+    .muscle-row__bar--low { background: #f59e0b; }
+
+    .muscle-row__sets {
+      font-size: 12px;
+      color: #71717a;
+      font-variant-numeric: tabular-nums;
+      width: 48px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── Undertrained warning ───────────────────────────────────────── */
+    .warning-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 28px;
+    }
+
+    .warning-box__title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 6px;
+    }
+
+    .warning-box__text {
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.5;
+    }
+
+    .warning-box__muscles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .muscle-tag {
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #92400e;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── No PRs / all good states ───────────────────────────────────── */
+    .empty-state {
+      font-size: 13px;
+      color: #71717a;
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    .all-good {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #15803d;
+      font-weight: 500;
+      margin-bottom: 28px;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────────── */
+    .footer {
+      background: #f4f4f5;
+      border-top: 1px solid #e4e4e7;
+      padding: 20px 32px;
+      text-align: center;
+    }
+
+    .footer__text {
+      font-size: 12px;
+      color: #a1a1aa;
+      line-height: 1.6;
+    }
+
+    .footer__link {
+      color: #71717a;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <div class="header">
+    <div class="header__brand">WORK<span>OUT</span></div>
+    <div class="header__sub">Weekly Digest</div>
+  </div>
+
+  <!-- ── Body ───────────────────────────────────────────────────────── -->
+  <div class="body">
+
+    <p class="greeting">Hey <span th:text="${digest.username}">Athlete</span> 👋</p>
+    <p class="week-range"
+       th:text="|Week of ${digest.weekStart} – ${digest.weekEnd}|">
+      Week of 2026-06-01 – 2026-06-07
+    </p>
+
+    <!-- ── Summary stats ──────────────────────────────────────────── -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <span class="stat-box__value" th:text="${digest.sessionsLogged}">4</span>
+        <span class="stat-box__label">Sessions</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box__value"
+              th:text="${#numbers.formatDecimal(digest.totalVolumeKg, 0, 'COMMA', 0, 'POINT')}">
+          12,450
+        </span>
+        <span class="stat-box__label">kg lifted</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box__value" th:text="${digest.newPrs.size()}">2</span>
+        <span class="stat-box__label">New PR<span th:if="${digest.newPrs.size() != 1}">s</span></span>
+      </div>
+    </div>
+
+    <!-- ── Personal Records ───────────────────────────────────────── -->
+    <div class="section">
+      <div class="section__title">🏆 Personal Records This Week</div>
+
+      <!-- Has PRs -->
+      <div th:if="${not #lists.isEmpty(digest.newPrs)}">
+        <div th:each="pr : ${digest.newPrs}" class="pr-item">
+          <span class="pr-item__name" th:text="${pr.exerciseName}">Bench Press</span>
+          <div style="text-align: right;">
+            <span class="pr-item__detail"
+                  th:text="|${pr.weightKg} kg × ${pr.reps} reps|">
+              100 kg × 5 reps
+            </span>
+            <span class="pr-item__1rm"
+                  th:text="|est. 1RM: ${#numbers.formatDecimal(pr.estimatedOneRM, 0, 'POINT', 1, 'POINT')} kg|">
+              est. 1RM: 116.7 kg
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No PRs -->
+      <p th:if="${#lists.isEmpty(digest.newPrs)}" class="empty-state">
+        No new PRs this week — keep chipping away, they'll come.
+      </p>
+    </div>
+
+    <!-- ── Muscle Volume ──────────────────────────────────────────── -->
+    <div class="section" th:if="${not #lists.isEmpty(digest.muscleVolume)}">
+      <div class="section__title">💪 Muscle Groups Trained</div>
+
+      <!--
+        Bar width is capped at 100%.
+        We use the first (highest) entry's set count as the max for scaling.
+        Thymeleaf can't do inline max() easily, so we compute pct as:
+        min(100, sets / maxSets * 100) where maxSets = first entry's sets.
+        Since the list is sorted descending, [0].sets is the max.
+      -->
+      <div th:with="maxSets=${digest.muscleVolume[0].sets}">
+        <div th:each="entry : ${digest.muscleVolume}" class="muscle-row">
+          <span class="muscle-row__name" th:text="${entry.muscle}">CHEST</span>
+          <div class="muscle-row__bar-wrap">
+            <div class="muscle-row__bar"
+                 th:classappend="${entry.sets < 6 ? 'muscle-row__bar--low' : ''}"
+                 th:style="|width: ${T(java.lang.Math).min(100, entry.sets * 100 / maxSets)}%|">
+            </div>
+          </div>
+          <span class="muscle-row__sets"
+                th:text="|${entry.sets} sets|">12 sets</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Undertrained warning ───────────────────────────────────── -->
+    <div th:if="${not #lists.isEmpty(digest.undertrainedMuscles)}" class="warning-box">
+      <div class="warning-box__title">⚠ Undertrained This Week</div>
+      <p class="warning-box__text">
+        The following muscle groups received fewer than 6 working sets —
+        below the Minimum Effective Volume for hypertrophy. Consider adding
+        a set or two next week.
+      </p>
+      <div class="warning-box__muscles">
+        <span th:each="muscle : ${digest.undertrainedMuscles}"
+              th:text="${muscle}"
+              class="muscle-tag">
+          BICEPS
+        </span>
+      </div>
+    </div>
+
+    <!-- ── All muscles well-trained ─────────────────────────────────── -->
+    <div th:if="${#lists.isEmpty(digest.undertrainedMuscles) and not #lists.isEmpty(digest.muscleVolume)}"
+         class="all-good">
+      ✅ Every muscle you trained hit ≥ 6 working sets. Great balanced week!
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <div class="footer">
+    <p class="footer__text">
+      You're receiving this because you have weekly digests enabled.<br/>
+      To unsubscribe, open the app → ⚙ Preferences → turn off <em>Weekly Digest</em>.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -84,6 +84,8 @@ public class TemplateSeeder implements CommandLineRunner {
             Map<String, String> idByName,
             List<TemplateEntry> entries) {
 
+        entries.forEach(e -> e.setExerciseId(idByName.get(e.getExerciseName())));
+
         return WorkoutTemplate.builder()
                 .ownerId(WorkoutTemplate.SYSTEM_OWNER)
                 .name(name)
@@ -98,7 +100,6 @@ public class TemplateSeeder implements CommandLineRunner {
     private TemplateEntry entry(String exerciseName, int sets, int reps, String notes) {
         return TemplateEntry.builder()
                 .exerciseName(exerciseName)
-                .exerciseId("")   // resolved at runtime if needed; name is the display value
                 .defaultSets(sets)
                 .defaultReps(reps)
                 .notes(notes)

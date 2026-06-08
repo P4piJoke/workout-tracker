@@ -32,6 +32,7 @@ export default function PreferencesModal({ onClose }) {
     heightCm: null,
     sex: null,
     activityLevel: null,
+    weeklyDigestEnabled: true,   // opt-in by default
   });
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function PreferencesModal({ onClose }) {
       heightCm: prefs.heightCm ?? 170,
       sex: prefs.sex ?? 'MALE',
       activityLevel: prefs.activityLevel ?? 'MODERATE',
+      weeklyDigestEnabled: prefs.weeklyDigestEnabled ?? true,
     });
   }, [prefs]);
 
@@ -159,7 +161,6 @@ export default function PreferencesModal({ onClose }) {
               <span className="pref-section__tag">Used by Health Calculators</span>
             </div>
 
-            {/* Sex */}
             <div style={{ marginBottom: '1rem' }}>
               <label className="field__label" style={{ display: 'block', marginBottom: '0.4rem' }}>Sex</label>
               <div className="calc-toggle-group" style={{ maxWidth: 240 }}>
@@ -176,7 +177,6 @@ export default function PreferencesModal({ onClose }) {
               </div>
             </div>
 
-            {/* Height */}
             <div style={{ marginBottom: '1rem' }}>
               <label className="field__label" style={{ display: 'block', marginBottom: '0.4rem' }}>Height</label>
               <Stepper
@@ -188,7 +188,6 @@ export default function PreferencesModal({ onClose }) {
               />
             </div>
 
-            {/* Activity level */}
             <div>
               <label className="field__label" style={{ display: 'block', marginBottom: '0.4rem' }}>Activity level</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -234,6 +233,72 @@ export default function PreferencesModal({ onClose }) {
               </div>
             </div>
           )}
+
+          {/* ── Weekly Digest ──────────────────────────── */}
+          <div className="pref-section">
+            <div className="pref-section__header">
+              <span className="pref-section__title">Weekly Digest</span>
+              <span className="pref-section__tag">Emailed every Monday</span>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0.85rem 1rem',
+              background: 'var(--bg-raised)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+            }}>
+              <div>
+                <p style={{
+                  fontSize: '0.875rem', fontWeight: 500,
+                  color: 'var(--text-primary)', marginBottom: '0.15rem'
+                }}>
+                  Weekly summary email
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Sessions, volume, PRs hit, and undertrained muscles — sent Monday at 8am.
+                </p>
+              </div>
+
+              {/* Toggle switch */}
+              <button
+                type="button"
+                onClick={() => set('weeklyDigestEnabled', !form.weeklyDigestEnabled)}
+                style={{
+                  flexShrink: 0,
+                  marginLeft: '1rem',
+                  width: 44,
+                  height: 24,
+                  borderRadius: 12,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: form.weeklyDigestEnabled
+                    ? 'var(--accent)'
+                    : 'var(--border-hover)',
+                  transition: 'background 150ms ease',
+                  position: 'relative',
+                }}
+                aria-label={form.weeklyDigestEnabled
+                  ? 'Disable weekly digest'
+                  : 'Enable weekly digest'}
+                aria-pressed={form.weeklyDigestEnabled}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: 3,
+                  left: form.weeklyDigestEnabled ? 23 : 3,
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  background: '#fff',
+                  transition: 'left 150ms ease',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                }} />
+              </button>
+            </div>
+          </div>
 
           {isError && (
             <p className="form-error">Failed to save — please try again.</p>
