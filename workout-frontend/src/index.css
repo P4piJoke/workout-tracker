@@ -110,8 +110,8 @@ a {
   max-width: 860px;
   width: 100%;
   margin: 0 auto;
-  /* Mobile-first: tighter padding */
   padding: 1.5rem 1rem 3rem;
+  overflow-x: hidden;
 }
 
 /* ─── Topbar ─────────────────────────────────────────────── */
@@ -1369,7 +1369,8 @@ a {
 
 .chart-card__controls {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1.25rem;
   align-items: flex-end;
 }
@@ -1562,6 +1563,14 @@ a {
   text-transform: uppercase;
 }
 
+.ol-card__name-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
 /* badge */
 .ol-card__badge {
   display: inline-flex;
@@ -1687,6 +1696,8 @@ a {
   border-radius: var(--radius-lg);
   padding: 1.25rem;
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .heatmap-meta {
@@ -1707,12 +1718,18 @@ a {
 
 .heatmap-scroll {
   overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
 }
 
 .heatmap-wrap {
   display: inline-flex;
   flex-direction: column;
   gap: 4px;
+  padding-bottom: 4px;
 }
 
 .heatmap-months {
@@ -2030,6 +2047,7 @@ a {
   padding: 1rem;
   z-index: 60;
   min-width: 262px;
+  max-width: calc(100vw - 2rem);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   animation: fade-in 100ms ease;
 }
@@ -3487,7 +3505,7 @@ input[type=number] {
   }
 
   .heatmap-wrap {
-    min-width: 620px;
+    padding-bottom: 4px;
   }
 
   .heatmap-months {

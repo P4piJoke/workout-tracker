@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMyWorkouts } from '../hooks/useWorkouts';
 
-const DAYS   = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
-                'Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function volumeOf(workout) {
   return workout.entries.reduce((sum, e) =>
@@ -21,7 +21,7 @@ function intensityLevel(volume, max) {
 
 export default function WorkoutHeatmap() {
   const { data: workouts = [] } = useMyWorkouts();
-  const [tooltip, setTooltip]  = useState(null);
+  const [tooltip, setTooltip] = useState(null);
 
   const { weeks, monthLabels, maxVol } = useMemo(() => {
     // Build a map of date → volume
@@ -51,7 +51,7 @@ export default function WorkoutHeatmap() {
       const week = [];
       for (let d = 0; d < 7; d++) {
         const dateStr = current.toISOString().split('T')[0];
-        const vol     = volByDate[dateStr] ?? 0;
+        const vol = volByDate[dateStr] ?? 0;
 
         if (d === 0) {
           const m = current.getMonth();
@@ -62,7 +62,7 @@ export default function WorkoutHeatmap() {
         }
 
         week.push({
-          date:  dateStr,
+          date: dateStr,
           vol,
           level: intensityLevel(vol, max),
           future: current > today,
@@ -76,7 +76,7 @@ export default function WorkoutHeatmap() {
   }, [workouts]);
 
   const totalSessions = workouts.length;
-  const activeDays    = weeks.flat().filter(d => d.vol > 0).length;
+  const activeDays = weeks.flat().filter(d => d.vol > 0).length;
 
   return (
     <div className="heatmap-card">
@@ -151,7 +151,7 @@ export default function WorkoutHeatmap() {
       {/* Tooltip */}
       {tooltip && (
         <div className="heatmap-tooltip"
-          style={{ left: tooltip.x + 12, top: tooltip.y - 36 }}>
+          style={{ left: Math.min(tooltip.x + 12, window.innerWidth - 200), top: tooltip.y - 36 }}>
           <strong>{tooltip.date}</strong>
           {tooltip.vol > 0
             ? <> — {Math.round(tooltip.vol).toLocaleString()} kg volume</>
