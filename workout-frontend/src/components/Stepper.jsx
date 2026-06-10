@@ -58,45 +58,22 @@ export default function Stepper({
   };
 
   return (
-    <div className={`stepper stepper--${size}`}>
+    <div className="stepper">
       {label && <span className="stepper__label">{label}</span>}
 
       <div className="stepper__control">
-        <button
-          type="button"
-          className="stepper__btn stepper__btn--dec"
-          onClick={dec}
-          disabled={!canDec}
-          aria-label="Decrease"
-        >
-          −
-        </button>
-
-        <div className="stepper__display">
-          {/* Replaced .stepper__val span with a number input */}
-          <input
-            type="number"
-            className="stepper__input"
-            value={inputValue}
-            onChange={handleInputChange}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            min={min}
-            max={max}
-            step={step}
-          />
-          {unit && <span className="stepper__unit">{unit}</span>}
-        </div>
-
-        <button
-          type="button"
-          className="stepper__btn stepper__btn--inc"
-          onClick={inc}
-          disabled={!canInc}
-          aria-label="Increase"
-        >
-          +
-        </button>
+        <input
+          type="number"
+          className="stepper__input"
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          min={min}
+          max={max}
+          step={step}
+        />
+        {unit && <span className="stepper__unit">{unit}</span>}
       </div>
     </div>
   );

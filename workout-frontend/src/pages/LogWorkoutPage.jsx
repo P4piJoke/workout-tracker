@@ -215,10 +215,10 @@ export default function LogWorkoutPage({ initialTemplate, onTemplateConsumed }) 
                     <span className="set-row__num">{si + 1}</span>
                     <Stepper value={s.reps} min={1}
                       onChange={v => updateSet(ei, si, 'reps', v)}
-                      unit="reps" size="sm" />
+                      size="sm" />
                     <Stepper value={s.weightKg} min={0} step={2.5}
                       onChange={v => updateSet(ei, si, 'weightKg', v)}
-                      unit="kg" size="sm" />
+                      size="sm" />
                     <select className="set-row__type" value={s.type}
                       onChange={e => updateSet(ei, si, 'type', e.target.value)}>
                       <option value="WORKING">Work</option>
