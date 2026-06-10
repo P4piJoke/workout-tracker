@@ -37,7 +37,7 @@ export default function OverloadCard({ rec }) {
         </div>
 
         <div className="ol-card__body">
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div className="ol-card__name-row">
             <h3 className="ol-card__name">{rec.exerciseName}</h3>
 
             {/* rep range badge — shows which range is driving this recommendation */}
