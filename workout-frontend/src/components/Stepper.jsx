@@ -58,7 +58,7 @@ export default function Stepper({
   };
 
   return (
-    <div className="stepper">
+    <div className={`stepper stepper--${size}`}>
       {label && <span className="stepper__label">{label}</span>}
 
       <div className="stepper__control">

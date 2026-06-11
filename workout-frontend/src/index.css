@@ -1867,6 +1867,12 @@ a {
   gap: 0.35rem;
 }
 
+.stepper--sm {
+  justify-self: center;
+  width: fit-content;
+  min-width: 0;
+}
+
 .stepper__label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -1896,6 +1902,11 @@ a {
   appearance: textfield;
 }
 
+.stepper--sm .stepper__input {
+  width: 82px;
+  padding: 0.5rem 0.7rem;
+}
+
 .stepper__input:focus {
   border-color: var(--accent);
 }
@@ -1913,6 +1924,10 @@ a {
   letter-spacing: 0.05em;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.stepper--sm .stepper__unit {
+  font-size: 0.7rem;
 }
 
 /* ─── DatePicker ─────────────────────────────────────────── */
@@ -2148,6 +2163,11 @@ a {
   outline: none;
   cursor: pointer;
   transition: border-color var(--transition);
+}
+
+.set-row .stepper,
+.set-row__type {
+  justify-self: center;
 }
 
 .set-row__type:focus {

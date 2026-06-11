@@ -3,6 +3,7 @@
   "loginTheme": "workout-tracker",
   "enabled": true,
   "registrationAllowed": true,
+  "verifyEmail": true,
   "roles": {
     "realm": [
       { "name": "user",  "description": "Regular app user" },
@@ -27,5 +28,14 @@
       }
     }
   ],
-  "defaultRoles": ["user"]
+  "defaultRoles": ["user"],
+  "smtpServer": {
+    "host": "smtp.gmail.com",
+    "port": "587",
+    "from": "kortongroove21@gmail.com",
+    "auth": "true",
+    "starttls": "true",
+    "user": "kortongroove21@gmail.com",
+    "password": "kqdt vgzh jtaa wlnz"
+  }
 }
