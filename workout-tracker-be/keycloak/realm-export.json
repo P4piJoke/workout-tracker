@@ -1,6 +1,7 @@
 {
   "realm": "workout-tracker",
   "loginTheme": "workout-tracker",
+  "emailTheme": "workout-tracker",
   "enabled": true,
   "registrationAllowed": true,
   "verifyEmail": true,
@@ -30,12 +31,14 @@
   ],
   "defaultRoles": ["user"],
   "smtpServer": {
+    "replyToDisplayName": "Workout Admin",
+    "fromDisplayName": "Workout Admin",
     "host": "smtp.gmail.com",
     "port": "587",
-    "from": "kortongroove21@gmail.com",
+    "from": "${KC_SMTP_USER}",
     "auth": "true",
     "starttls": "true",
-    "user": "kortongroove21@gmail.com",
-    "password": "kqdt vgzh jtaa wlnz"
+    "user": "${KC_SMTP_USER}",
+    "password": "${KC_SMTP_PASSWORD}"
   }
 }
