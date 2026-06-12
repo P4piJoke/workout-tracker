@@ -77,7 +77,7 @@
   <div class="body">
     <h1 class="title">Verify your email</h1>
     <p class="sub">
-      Hey ${name}, thanks for joining.<br/>
+      Hey ${name!'Athlete'}, thanks for joining.<br/>
       Click the button below to confirm your email address and activate your account.
     </p>
     <a class="btn" href="${link}">Confirm email →</a>
